@@ -58,7 +58,8 @@ class ASR(sb.core.Brain):
         logits = self.modules.ctc_lin(x)
         p_ctc = self.hparams.log_softmax(logits)
 
-        return p_ctc, wav_lens
+        predictions = p_ctc, wav_lens
+        return predictions
 
     def compute_objectives(self, predictions, batch, stage):
         """Computes the loss (CTC) given predictions and targets."""
