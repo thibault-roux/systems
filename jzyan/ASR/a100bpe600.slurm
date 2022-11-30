@@ -16,5 +16,5 @@
 
 # python -m torch.distributed.launch --nproc_per_node=2 train.py hparams/char80.yaml --distributed_launch --distributed_backend='nccl'
 
-python train.py hparams/bpe80.yaml --data_parallel_backend
+python train.py hparams/bpe600.yaml --data_parallel_backend
 
