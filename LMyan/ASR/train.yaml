@@ -8,10 +8,10 @@
 seed: 4328
 # seed: 1239
 __set_seed: !!python/object/apply:torch.manual_seed [!ref <seed>]
-output_folder: !ref results/wav2vec2_ctc_fr/<seed>
 wer_file: !ref <output_folder>/wer.txt
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
+output_folder: !ref results/wav2vec2_ctc_fr/<seed>
 
 # URL for the biggest LeBenchmark wav2vec french.
 # wav2vec2_hub: LeBenchmark/wav2vec2-FR-7K-base
@@ -173,27 +173,11 @@ wav2vec2: !new:speechbrain.lobes.models.huggingface_wav2vec.HuggingFaceWav2Vec2
 #####
 
 
-ctc_lin: !new:speechbrain.nnet.linear.Linear
-    input_size: !ref <dnn_neurons>
-    n_neurons: !ref <output_neurons>
 
-log_softmax: !new:speechbrain.nnet.activations.Softmax
-    apply_log: True
-
-ctc_cost: !name:speechbrain.nnet.losses.ctc_loss
-    blank_index: !ref <blank_index>
-
-
-
-
+# ADD
 emb_dim_lm: 256 # dimension of the embeddings
 rnn_size_lm: 512 # dimension of hidden layers
 layers_lm: 2 # number of hidden layers_lm
-
-
-# To design a custom model, either just edit the simple CustomModel
-# class that's listed here, or replace this `!new` call with a line
-# pointing to a different file you've defined..
 lm_model: !new:speechbrain.lobes.models.RNNLM.RNNLM 
     embedding_dim: !ref <emb_dim_lm>
     rnn_neurons: !ref <rnn_size_lm>
@@ -202,16 +186,65 @@ lm_model: !new:speechbrain.lobes.models.RNNLM.RNNLM
 
 
 
+ctc_lin: !new:speechbrain.nnet.linear.Linear
+    input_size: !ref <dnn_neurons>
+    n_neurons: !ref <output_neurons>
 
+# ADD
+seq_lin: !new:speechbrain.nnet.linear.Linear
+    input_size: !ref <dnn_neurons>
+    n_neurons: !ref <output_neurons>
+
+
+log_softmax: !new:speechbrain.nnet.activations.Softmax
+    apply_log: True
+
+ctc_cost: !name:speechbrain.nnet.losses.ctc_loss
+    blank_index: !ref <blank_index>
+
+# ADD
+label_smoothing: 0.0
+loss_reduction: 'batchmean'
+seq_cost: !name:speechbrain.nnet.losses.kldiv_loss
+    label_smoothing: !ref <label_smoothing>
+    reduction: !ref <loss_reduction>
 
 modules:
     wav2vec2: !ref <wav2vec2>
     enc: !ref <enc>
+    seq_lin: !ref <seq_lin>
     ctc_lin: !ref <ctc_lin>
-    lm_model: !ref <lm_model>
 
 model: !new:torch.nn.ModuleList
-    - [!ref <enc>, !ref <ctc_lin>]
+    - [!ref <enc>, !ref <seq_lin>, !ref <ctc_lin>]
+
+
+# ADD LM
+# Decoding parameters
+min_decode_ratio: 0.0
+max_decode_ratio: 1.0
+# valid_search_interval: 10
+# valid_beam_size: 10
+test_beam_size: 66
+lm_weight: 0.60
+ctc_weight_decode: 0.40
+
+test_search: !new:speechbrain.decoders.S2STransformerBeamSearch
+    modules: [!ref <wav2vec2>, !ref <seq_lin>, !ref <ctc_lin>]
+    bos_index: !ref <bos_index>
+    eos_index: !ref <eos_index>
+    blank_index: !ref <blank_index>
+    min_decode_ratio: !ref <min_decode_ratio>
+    max_decode_ratio: !ref <max_decode_ratio>
+    beam_size: !ref <test_beam_size>
+    ctc_weight: !ref <ctc_weight_decode>
+    lm_weight: !ref <lm_weight>
+    lm_modules: !ref <lm_model>
+    temperature: 1.15
+    temperature_lm: 1.15
+    using_eos_threshold: False
+    length_normalization: True
+
 
 model_opt_class: !name:torch.optim.Adadelta
     lr: !ref <lr>
@@ -255,7 +288,7 @@ user_defined_symbols:
 
 
 
-
+# ADD
 pretrainer: !new:speechbrain.utils.parameter_transfer.Pretrainer
     collect_in: !ref <save_folder>
     loadables:

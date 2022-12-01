@@ -56,9 +56,30 @@ class ASR(sb.core.Brain):
         feats = self.modules.wav2vec2(wavs)
         x = self.modules.enc(feats)
         logits = self.modules.ctc_lin(x)
-        p_ctc = self.hparams.log_softmax(logits)
+        p_ctc = self.hparams.log_softmax(logits) # p_ctc correspond à p_seq
+
+        # ADD
+        # output layer for seq2seq log-probabilities
+        # pred = self.modules.seq_lin(feats[1])
+        # p_seq = self.hparams.log_softmax(pred)
+
 
         predictions = p_ctc, wav_lens
+        # predictions = p_seq, wav_lens
+
+        # add language model here
+        if stage == sb.Stage.TEST:
+            # predictions["tokens"], _ = self.hparams.test_search(
+            #     encoded_signal, self.feat_lens
+            # )
+            hyps, _ = self.hparams.test_search(x.detach(), wav_lens)
+            print("hyps:")
+            print(hyps)
+            input()
+            print("_")
+            print(_)
+            input()
+
         return predictions
 
     def compute_objectives(self, predictions, batch, stage):
