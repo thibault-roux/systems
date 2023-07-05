@@ -16,7 +16,7 @@ def count():
     lengths = np.array(lengths)
 
     # plot the histogram of the length of words
-    plt.hist(lengths, bins=20)
+    plt.hist(lengths, bins=20, edgecolor='black')
     plt.title("Histogram of the length of words")
     plt.xlabel("Length of words")
     plt.ylabel("Frequency")
