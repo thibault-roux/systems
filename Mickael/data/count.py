@@ -1,5 +1,5 @@
 import numpy as np
-
+from matplotlib import pyplot as plt
 
 # read test.csv file to count the length of each word
 
@@ -14,6 +14,14 @@ def count():
                 lengths.append(len(word))
 
     lengths = np.array(lengths)
+
+    # plot the histogram of the length of words
+    plt.hist(lengths, bins=20)
+    plt.title("Histogram of the length of words")
+    plt.xlabel("Length of words")
+    plt.ylabel("Frequency")
+    plt.show()
+    plt.savefig("histogram.png")
     return lengths
 
 if __name__ == "__main__":
