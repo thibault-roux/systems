@@ -24,6 +24,25 @@ def count():
     plt.savefig("histogram.png")
     return lengths
 
+def count_bpe_length(name):
+    lengths = []
+    with open("../results_lia_asr/" + name + "_7k/1234/save/" + name + ".vocab", 'r') as f: # not name !! 250_bpe or 250bpe
+        for line in f:
+            sent = line.strip().split(' ')
+            for word in sent:
+                lengths.append(len(word))
+
+    lengths = np.array(lengths)
+
+    # plot the histogram of the length of words
+    plt.hist(lengths, bins=20, edgecolor='black')
+    plt.title("Histogram of the length of words")
+    plt.xlabel("Length of words")
+    plt.ylabel("Frequency")
+    plt.show()
+    plt.savefig("histogram.png")
+    return lengths
+
 if __name__ == "__main__":
     lengths = count()
     print("The average length of words is: ", np.mean(lengths))
