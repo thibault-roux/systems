@@ -21,12 +21,13 @@ def count():
     plt.xlabel("Length of words")
     plt.ylabel("Frequency")
     plt.show()
-    plt.savefig("histogram.png")
+    plt.savefig("hist/corpus.png")
     return lengths
 
-def count_bpe_length(name):
+def count_bpe_length(tok, number, other=""):
+    name = "SB_" + number + "_" + tok + other
     lengths = []
-    with open("../results_lia_asr/" + name + "_7k/1234/save/" + name + ".vocab", 'r') as f: # not name !! 250_bpe or 250bpe
+    with open("../results_lia_asr/wav2vec2_ctc_fr_" + tok + number + "_7k/1234/save/" + number + "_" + tok + ".vocab", 'r') as f:
         for line in f:
             sent = line.strip().split(' ')
             for word in sent:
@@ -40,7 +41,7 @@ def count_bpe_length(name):
     plt.xlabel("Length of words")
     plt.ylabel("Frequency")
     plt.show()
-    plt.savefig("histogram.png")
+    plt.savefig("hist/" + name + ".png")
     return lengths
 
 if __name__ == "__main__":
@@ -49,3 +50,5 @@ if __name__ == "__main__":
     print("The max length of words is: ", np.max(lengths))
     print("The min length of words is: ", np.min(lengths))
     print("The standard deviation of words is: ", np.std(lengths))
+
+    count_bpe_length("bpe", "500")
