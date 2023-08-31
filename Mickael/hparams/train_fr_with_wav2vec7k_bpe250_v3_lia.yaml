@@ -8,7 +8,7 @@
 seed: 1234
 # seed: 1239
 __set_seed: !!python/object/apply:torch.manual_seed [!ref <seed>]
-output_folder: !ref results_lia_asr/wav2vec2_ctc_fr_bpe250_7k/<seed>
+output_folder: !ref results_lia_asr/wav2vec2_ctc_fr_bpe250_v3_7k/<seed>
 wer_file: !ref <output_folder>/wer.txt
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
