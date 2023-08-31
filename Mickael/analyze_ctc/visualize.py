@@ -3,12 +3,19 @@ import pickle
 import matplotlib.pyplot as plt
 
 
-def load_dict():
+def load_dict(system):
     ind2tok = dict()
     tok2ind = dict()
     ind = 0
-    with open("../results_lia_asr/wav2vec2_ctc_fr_test2/1234/save/750_bpe.vocab", "r") as f:
-    # with open("../results_lia_asr/wav2vec2_ctc_fr_test2_char/1234/save/100_char.vocab", "r") as f:
+    if "bpe" in system:
+        type_tok = "bpe"
+        number = system.split("bpe")[1].split("_")[0]
+    else:
+        type_tok = "char"
+        number = "100"
+    if number == 70:
+        number = 50
+    with open("../results_lia_asr/" + system + "/1234/save/" + number + "_" + type_tok + ".vocab", "r") as f:
         for line in f:
             tok = line.split()[0]
             tok = tok.replace("▁", " ")
@@ -18,19 +25,13 @@ def load_dict():
     return ind2tok, tok2ind
 
 
-if __name__ == "__main__":
-    # p_ctc = pickle.load(open("p_ctc_char.pkl", "rb"))[0].cpu()
-    # tensor = p_ctc.numpy()
-    # pickle.dump(tensor, open("tensor_char.pkl", "wb"))
-
-    # tensor = pickle.load(open("tensor_char.pkl", "rb"))
-    tensor = pickle.load(open("tensor.pkl", "rb"))
+def plot_ctc_heatmap(system):
+    tensor = pickle.load(open("pickle/tensor_" + system, "rb"))
 
     sentence = "alors nous avons un"
-    # print(sentence)
 
     # Load dict
-    ind2tok, tok2ind = load_dict()
+    ind2tok, tok2ind = load_dict(system
     useful_toks = set()
     useful_toks.add("<unk>")
     for ind, tok in ind2tok.items():
@@ -41,58 +42,36 @@ if __name__ == "__main__":
     useful_toks = [' ', '<unk>', 'a', 'l', 'o', 'r', 's', 'n', 'u', 'v']
     useful_toks.sort()
     useful_rows_ids = [tok2ind[tok] for tok in useful_toks]
-    print(useful_toks)
-    
-    # print(useful_toks)
-    # print(useful_rows_ids)
 
-    # filtered_tensor = tensor
-
-    # # print the id corresponding to the highest value of the tensor
-    # useful_columns_ids = []
-    # for i in range(filtered_tensor.shape[0]):
-    #     print(i, np.argmax(filtered_tensor[i]))
-        # if np.argmax(filtered_tensor[i]) != 0:
-        #    useful_columns_ids.append(i)
-
-
+    # normalization
     # tensor = tensor / np.linalg.norm(tensor, axis=1, keepdims=True)
     # min_values = np.min(tensor, axis=1)
     # max_values = np.max(tensor, axis=1)
     # tensor = (tensor - min_values[:, np.newaxis]) / (max_values[:, np.newaxis] - min_values[:, np.newaxis])
-    tensor = exp(tensor)
 
+    # compute the exponential of the tensor
+    tensor = np.exp(tensor)
 
-    for i in range(tensor.shape[0]):
-        indice = np.argmax(tensor[i])
-        # print(np.sum(tensor[i]))
-        print(i, ind2tok[indice], indice, tensor[i][indice])
-    input()
-
+    # keep only the rows with interesting tokens
     filtered_tensor = tensor[:, useful_rows_ids]
-    # filtered_tensor = filtered_tensor[useful_columns_ids, :]
 
-    
-    for i in range(filtered_tensor.shape[0]):
-        print(np.argmax(filtered_tensor[i]))
-    
-    
+    # transpose to have temporality in x-axis
     filtered_tensor = np.transpose(filtered_tensor)
-    
     # Create a heatmap
     plt.figure(figsize=(10, 6))
     plt.imshow(filtered_tensor, cmap='viridis', aspect='auto')
-
-    # Customize the plot as needed
     # plt.title("CTC Layer Output Heatmap")
     # plt.xlabel("Token Index")
     # plt.ylabel("Speech Segment")
     plt.yticks(np.arange(len(useful_toks)), useful_toks)
     plt.colorbar(label="Value")
-
-    # Show the plot
     plt.show()
 
 
-    # plt.savefig("heatmap_char.png")
-    plt.savefig("heatmap2.png")
+    plt.savefig("figures/heatmap_" + system + ".png")
+
+if __name__ == "__main__":
+    systems = ["wav2vec2_ctc_fr_1k.pkl", "wav2vec2_ctc_fr_3k.pkl", "wav2vec2_ctc_fr_7k.pkl", "wav2vec2_ctc_fr_bpe1000_7k.pkl", "wav2vec2_ctc_fr_bpe100_7k.pkl", "wav2vec2_ctc_fr_bpe1500_7k.pkl", "wav2vec2_ctc_fr_bpe150_7k.pkl", "wav2vec2_ctc_fr_bpe250_7k.pkl", "wav2vec2_ctc_fr_bpe500_7k.pkl", "wav2vec2_ctc_fr_bpe50_7k.pkl", "wav2vec2_ctc_fr_bpe650_7k.pkl", "wav2vec2_ctc_fr_bpe750_7k.pkl", "wav2vec2_ctc_fr_bpe900_7k.pkl", "wav2vec2_ctc_fr_xlsr_53_french.pkl", "wav2vec2_ctc_fr_xlsr_53.pkl"] 
+    for system in systems:
+        plot_ctc_heatmap(system)
+        break
