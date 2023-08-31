@@ -26,12 +26,12 @@ def load_dict(system):
 
 
 def plot_ctc_heatmap(system):
-    tensor = pickle.load(open("pickle/tensor_" + system, "rb"))
+    tensor = pickle.load(open("pickle/tensor_" + system + ".pkl", "rb"))
 
     sentence = "alors nous avons un"
 
     # Load dict
-    ind2tok, tok2ind = load_dict(system
+    ind2tok, tok2ind = load_dict(system)
     useful_toks = set()
     useful_toks.add("<unk>")
     for ind, tok in ind2tok.items():
@@ -68,10 +68,9 @@ def plot_ctc_heatmap(system):
     plt.show()
 
 
-    plt.savefig("figures/heatmap_" + system + ".png")
+    plt.savefig("figures/exp/heatmap_" + system + ".png")
 
 if __name__ == "__main__":
-    systems = ["wav2vec2_ctc_fr_1k.pkl", "wav2vec2_ctc_fr_3k.pkl", "wav2vec2_ctc_fr_7k.pkl", "wav2vec2_ctc_fr_bpe1000_7k.pkl", "wav2vec2_ctc_fr_bpe100_7k.pkl", "wav2vec2_ctc_fr_bpe1500_7k.pkl", "wav2vec2_ctc_fr_bpe150_7k.pkl", "wav2vec2_ctc_fr_bpe250_7k.pkl", "wav2vec2_ctc_fr_bpe500_7k.pkl", "wav2vec2_ctc_fr_bpe50_7k.pkl", "wav2vec2_ctc_fr_bpe650_7k.pkl", "wav2vec2_ctc_fr_bpe750_7k.pkl", "wav2vec2_ctc_fr_bpe900_7k.pkl", "wav2vec2_ctc_fr_xlsr_53_french.pkl", "wav2vec2_ctc_fr_xlsr_53.pkl"] 
+    systems = ["wav2vec2_ctc_fr_1k", "wav2vec2_ctc_fr_3k", "wav2vec2_ctc_fr_7k", "wav2vec2_ctc_fr_bpe1000_7k", "wav2vec2_ctc_fr_bpe100_7k", "wav2vec2_ctc_fr_bpe1500_7k", "wav2vec2_ctc_fr_bpe150_7k", "wav2vec2_ctc_fr_bpe250_7k", "wav2vec2_ctc_fr_bpe500_7k", "wav2vec2_ctc_fr_bpe50_7k", "wav2vec2_ctc_fr_bpe650_7k", "wav2vec2_ctc_fr_bpe750_7k", "wav2vec2_ctc_fr_bpe900_7k", "wav2vec2_ctc_fr_xlsr_53_french", "wav2vec2_ctc_fr_xlsr_53"] 
     for system in systems:
         plot_ctc_heatmap(system)
-        break
