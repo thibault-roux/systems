@@ -7,8 +7,8 @@ def load_dict():
     ind2tok = dict()
     tok2ind = dict()
     ind = 0
-    with open("../results_lia_asr/wav2vec2_ctc_fr_test2/1234/save/750_bpe.vocab", "r") as f:
-    # with open("../results_lia_asr/wav2vec2_ctc_fr_test2_char/1234/save/100_char.vocab", "r") as f:
+    # with open("../results_lia_asr/wav2vec2_ctc_fr_test2/1234/save/750_bpe.vocab", "r") as f:
+    with open("../results_lia_asr/wav2vec2_ctc_fr_test2_char/1234/save/100_char.vocab", "r") as f:
         for line in f:
             tok = line.split()[0]
             tok = tok.replace("▁", " ")
@@ -23,8 +23,8 @@ if __name__ == "__main__":
     # tensor = p_ctc.numpy()
     # pickle.dump(tensor, open("tensor_char.pkl", "wb"))
 
-    # tensor = pickle.load(open("tensor_char.pkl", "rb"))
-    tensor = pickle.load(open("tensor.pkl", "rb"))
+    tensor = pickle.load(open("tensor_char.pkl", "rb"))
+    # tensor = pickle.load(open("tensor.pkl", "rb"))
 
     sentence = "alors nous avons un"
     # print(sentence)
@@ -94,5 +94,5 @@ if __name__ == "__main__":
     plt.show()
 
 
-    # plt.savefig("heatmap_char.png")
-    plt.savefig("heatmap2_temp.png")
+    plt.savefig("heatmap_char_temp.png")
+    # plt.savefig("heatmap2.png")
