@@ -60,23 +60,23 @@ if __name__ == "__main__":
     # min_values = np.min(tensor, axis=1)
     # max_values = np.max(tensor, axis=1)
     # tensor = (tensor - min_values[:, np.newaxis]) / (max_values[:, np.newaxis] - min_values[:, np.newaxis])
-    tensor = exp(tensor)
+
+    # compute the exponential of the tensor
+    tensor = np.exp(tensor)
 
 
-    for i in range(tensor.shape[0]):
-        indice = np.argmax(tensor[i])
-        # print(np.sum(tensor[i]))
-        print(i, ind2tok[indice], indice, tensor[i][indice])
-    input()
+    # old visualisation
+    # for i in range(tensor.shape[0]):
+    #     indice = np.argmax(tensor[i])
+    #     # print(np.sum(tensor[i]))
+    #     print(i, ind2tok[indice], indice, tensor[i][indice])
+    # input()
 
+    # keep only the rows with interesting tokens
     filtered_tensor = tensor[:, useful_rows_ids]
     # filtered_tensor = filtered_tensor[useful_columns_ids, :]
 
-    
-    for i in range(filtered_tensor.shape[0]):
-        print(np.argmax(filtered_tensor[i]))
-    
-    
+    # transpose to have temporality in x-axis
     filtered_tensor = np.transpose(filtered_tensor)
     
     # Create a heatmap
@@ -95,4 +95,4 @@ if __name__ == "__main__":
 
 
     # plt.savefig("heatmap_char.png")
-    plt.savefig("heatmap2.png")
+    plt.savefig("heatmap2_temp.png")
