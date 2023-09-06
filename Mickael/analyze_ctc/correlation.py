@@ -69,13 +69,13 @@ def correlation(system1, system2): # vocab = {token, char, all}, normtype = {exp
 
     # calculer la corrélation entre deux systèmes
     # calculer correlation[system1, system2] pour tous les tokens
-    correlation_matrix = np.zeros(len(useful_toks), len(useful_toks))
+    correlation_matrix = np.zeros((len(useful_toks), len(useful_toks)))
     for tok1 in useful_toks:
         for tok2 in useful_toks:
             id1 = tok2ind1[tok1]
             id2 = tok2ind2[tok2]
             corr, pval = scipy.stats.spearmanr(tensor1[:, id1], tensor2[:, id2])
-            correlation_matrix[tok1, tok2] = corr
+            correlation_matrix[useful_toks.index(tok1)][useful_toks.index(tok2)] = corr
             # print(tok1, tok2, int(corr*1000)/1000, int(pval*1000)/1000)
 
     # Créer la heatmap
