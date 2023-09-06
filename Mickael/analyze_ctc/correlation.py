@@ -1,6 +1,10 @@
 import numpy as np
 import pickle
 import scipy.stats
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+
 
 def load_dict(system):
     ind2tok = dict()
@@ -50,49 +54,43 @@ def correlation(system1, system2): # vocab = {token, char, all}, normtype = {exp
     #     indice = np.argmax(tensor1[i])
     #     print(i, indice, ind2tok1[indice])
 
-    # input()
+    # example of correlation of a token between two systems
+    # id1 = tok2ind1["a"]
+    # id2 = tok2ind2["a"]
+    # print(tensor1[:, id1]) # 65 signifie que c'est le token choisi
+    # print(tensor2[:, id2])
+    # # correlation between the rows
+    # print(scipy.stats.spearmanr(tensor1[:, id1], tensor2[:, id2]))
 
 
 
 
     # calculer la corrélation entre deux systèmes {proches, différents} et entre deux tokens {même, autre}
 
-    # est-ce que ça sert ce qui est fait là ?
-    # moyenne des corrélation entre les tokens à l'intérieur du système
-    already_seen = set()
+    # calculer la corrélation entre deux systèmes
+    # calculer correlation[system1, system2] pour tous les tokens
+    correlation_matrix = np.zeros(len(useful_toks), len(useful_toks))
     for tok1 in useful_toks:
         for tok2 in useful_toks:
-            # check if (tok1, tok2) and (tok2, tok1) have already been seen
-            if (tok1, tok2) in already_seen or (tok2, tok1) in already_seen:
-                continue
-            else:
-                already_seen.add((tok1, tok2))
             id1 = tok2ind1[tok1]
-            id2 = tok2ind1[tok2]
-            corr, pval = scipy.stats.spearmanr(tensor1[:, id1], tensor1[:, id2])
-            print(tok1, tok2, int(corr*1000)/1000, int(pval*1000)/1000)
+            id2 = tok2ind2[tok2]
+            corr, pval = scipy.stats.spearmanr(tensor1[:, id1], tensor2[:, id2])
+            correlation_matrix[tok1, tok2] = corr
+            # print(tok1, tok2, int(corr*1000)/1000, int(pval*1000)/1000)
 
-    input()
+    # Créer la heatmap
+    plt.figure(figsize=(8, 6))
+    plt.imshow(correlation_matrix, cmap='coolwarm', interpolation='nearest')
+    plt.colorbar(label="Score de Corrélation")
+    plt.xticks(np.arange(len(useful_toks)), useful_toks, rotation=45)
+    plt.yticks(np.arange(len(useful_toks)), useful_toks)
+    plt.title("Heatmap des Scores de Corrélation entre les Étudiants")
+    plt.show()
 
-    id1 = tok2ind1["a"]
-    id2 = tok2ind2["a"]
-    print(tensor1[:, id1]) # 65 signifie que c'est le token choisi
-    print(tensor2[:, id2])
-    # correlation between the rows
-    print(scipy.stats.spearmanr(tensor1[:, id1], tensor2[:, id2]))
-
-    # compute a matrix of correlation between the rows and plot the matrix
-    # matrix = np.zeros((tensor1.shape[1], tensor2.shape[1]))
-    # for tok1 in useful_toks:
-    #     for tok2 in useful_toks:
-    #         id1 = tok2ind1[tok1]
-    #         id2 = tok2ind2[tok2]
-    #         matrix[id1, id2] = scipy.stats.spearmanr(tensor1[:, id1], tensor2[:, id2])[0]
-    #         print(tok1, tok2, scipy.stats.spearmanr(tensor1[:, id1], tensor2[:, id2]))
-
-
+    plt.savefig("figures/corr/heatmap.png")
 
 if __name__ == "__main__":
     system1 = "wav2vec2_ctc_fr_bpe1000_7k"
     system2 =  "wav2vec2_ctc_fr_bpe150_7k"
+    # double boucle for every pair of systems
     correlation(system1, system2)
