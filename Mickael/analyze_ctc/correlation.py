@@ -28,7 +28,7 @@ def load_dict(system):
     return ind2tok, tok2ind
 
 
-def correlation(system1, system2): # vocab = {token, char, all}, normtype = {exp, norm}
+def correlation(system1, system2, sys1, sys2, plot): # vocab = {token, char, all}, normtype = {exp, norm}
     tensor1 = pickle.load(open("pickle/tensor_" + system1 + ".pkl", "rb"))
     tensor2 = pickle.load(open("pickle/tensor_" + system2 + ".pkl", "rb"))
 
@@ -78,19 +78,29 @@ def correlation(system1, system2): # vocab = {token, char, all}, normtype = {exp
             correlation_matrix[useful_toks.index(tok1)][useful_toks.index(tok2)] = corr
             # print(tok1, tok2, int(corr*1000)/1000, int(pval*1000)/1000)
 
-    # Créer la heatmap
-    plt.figure(figsize=(8, 6))
-    plt.imshow(correlation_matrix, cmap='coolwarm', interpolation='nearest')
-    plt.colorbar(label="Score de Corrélation")
-    plt.xticks(np.arange(len(useful_toks)), useful_toks, rotation=45)
-    plt.yticks(np.arange(len(useful_toks)), useful_toks)
-    plt.title("Heatmap des Scores de Corrélation entre les Étudiants")
-    plt.show()
+    if plot:
+        # Créer la heatmap
+        plt.figure(figsize=(8, 6))
+        plt.imshow(correlation_matrix, cmap='coolwarm', interpolation='nearest')
+        plt.colorbar(label="Score de Corrélation")
+        plt.xticks(np.arange(len(useful_toks)), useful_toks, rotation=45)
+        plt.yticks(np.arange(len(useful_toks)), useful_toks)
+        plt.title("Scores de corrélation inter-tokens entre " + sys1 + " et " + sys2)
+        plt.show()
 
-    plt.savefig("figures/corr/heatmap.png")
+        plt.savefig("figures/corr/" + sys1 + "-" + sys2 + ".png")
+        plt.close('all')
 
 if __name__ == "__main__":
-    system1 = "wav2vec2_ctc_fr_bpe1000_7k"
-    system2 =  "wav2vec2_ctc_fr_bpe150_7k"
-    # double boucle for every pair of systems
-    correlation(system1, system2)
+    # systems = ["wav2vec2_ctc_fr_1k", "wav2vec2_ctc_fr_3k", "wav2vec2_ctc_fr_7k", "wav2vec2_ctc_fr_bpe50_7k", "wav2vec2_ctc_fr_bpe100_7k", "wav2vec2_ctc_fr_bpe150_7k", "wav2vec2_ctc_fr_bpe250_7k", "wav2vec2_ctc_fr_bpe500_7k", "wav2vec2_ctc_fr_bpe650_7k", "wav2vec2_ctc_fr_bpe750_7k", "wav2vec2_ctc_fr_bpe750_7k", "wav2vec2_ctc_fr_bpe900_7k", "wav2vec2_ctc_fr_bpe1000_7k", "wav2vec2_ctc_fr_bpe1500_7k"]
+    # sys = ["1k", "3k", "7k", "bpe50_7k", "bpe100_7k", "bpe150_7k", "bpe250_7k", "bpe500_7k", "bpe650_7k", "bpe750_7k", "bpe750_7k", "bpe900_7k", "bpe1000_7k", "bpe1500_7k"]
+    systems = ["wav2vec2_ctc_fr_7k", "wav2vec2_ctc_fr_bpe50_7k", "wav2vec2_ctc_fr_bpe100_7k", "wav2vec2_ctc_fr_bpe150_7k", "wav2vec2_ctc_fr_bpe250_7k", "wav2vec2_ctc_fr_bpe500_7k", "wav2vec2_ctc_fr_bpe650_7k", "wav2vec2_ctc_fr_bpe750_7k", "wav2vec2_ctc_fr_bpe750_7k", "wav2vec2_ctc_fr_bpe900_7k", "wav2vec2_ctc_fr_bpe1000_7k", "wav2vec2_ctc_fr_bpe1500_7k"]
+    sys = ["7k", "bpe50_7k", "bpe100_7k", "bpe150_7k", "bpe250_7k", "bpe500_7k", "bpe650_7k", "bpe750_7k", "bpe750_7k", "bpe900_7k", "bpe1000_7k", "bpe1500_7k"]
+    system2sys = dict()
+    for i in range(len(systems)):
+        system2sys[systems[i]] = sys[i]
+
+    for system1 in systems:
+        print(system2sys[system1])
+        for system2 in systems:
+            correlation(system1, system2, system2sys[system1], system2sys[system2], plot=False)
