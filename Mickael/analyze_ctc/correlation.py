@@ -4,6 +4,7 @@ import scipy.stats
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
+import pandas as pd
 
 
 def load_dict(system):
@@ -63,11 +64,8 @@ def correlation(system1, system2, sys1, sys2, plot): # vocab = {token, char, all
     # print(scipy.stats.spearmanr(tensor1[:, id1], tensor2[:, id2]))
 
 
+    scores = []
 
-
-    # calculer la corrélation entre deux systèmes {proches, différents} et entre deux tokens {même, autre}
-
-    # calculer la corrélation entre deux systèmes
     # calculer correlation[system1, system2] pour tous les tokens
     correlation_matrix = np.zeros((len(useful_toks), len(useful_toks)))
     for tok1 in useful_toks:
@@ -77,6 +75,8 @@ def correlation(system1, system2, sys1, sys2, plot): # vocab = {token, char, all
             corr, pval = scipy.stats.spearmanr(tensor1[:, id1], tensor2[:, id2])
             correlation_matrix[useful_toks.index(tok1)][useful_toks.index(tok2)] = corr
             # print(tok1, tok2, int(corr*1000)/1000, int(pval*1000)/1000)
+            if tok1 == tok2 and pval < 0.05:
+                scores.append(corr)
 
     if plot:
         # Créer la heatmap
@@ -91,16 +91,42 @@ def correlation(system1, system2, sys1, sys2, plot): # vocab = {token, char, all
         plt.savefig("figures/corr/" + sys1 + "-" + sys2 + ".png")
         plt.close('all')
 
+    # scores = []
+    # # compute average of correlation with same token
+    # for i in range(correlation_matrix.shape[0]):
+    #     scores.append(correlation_matrix[i][i])
+    # return np.mean(scores)
+
+    print(len(scores))
+    return np.mean(scores)
+
+
+
 if __name__ == "__main__":
     # systems = ["wav2vec2_ctc_fr_1k", "wav2vec2_ctc_fr_3k", "wav2vec2_ctc_fr_7k", "wav2vec2_ctc_fr_bpe50_7k", "wav2vec2_ctc_fr_bpe100_7k", "wav2vec2_ctc_fr_bpe150_7k", "wav2vec2_ctc_fr_bpe250_7k", "wav2vec2_ctc_fr_bpe500_7k", "wav2vec2_ctc_fr_bpe650_7k", "wav2vec2_ctc_fr_bpe750_7k", "wav2vec2_ctc_fr_bpe750_7k", "wav2vec2_ctc_fr_bpe900_7k", "wav2vec2_ctc_fr_bpe1000_7k", "wav2vec2_ctc_fr_bpe1500_7k"]
     # sys = ["1k", "3k", "7k", "bpe50_7k", "bpe100_7k", "bpe150_7k", "bpe250_7k", "bpe500_7k", "bpe650_7k", "bpe750_7k", "bpe750_7k", "bpe900_7k", "bpe1000_7k", "bpe1500_7k"]
-    systems = ["wav2vec2_ctc_fr_7k", "wav2vec2_ctc_fr_bpe50_7k", "wav2vec2_ctc_fr_bpe100_7k", "wav2vec2_ctc_fr_bpe150_7k", "wav2vec2_ctc_fr_bpe250_7k", "wav2vec2_ctc_fr_bpe500_7k", "wav2vec2_ctc_fr_bpe650_7k", "wav2vec2_ctc_fr_bpe750_7k", "wav2vec2_ctc_fr_bpe750_7k", "wav2vec2_ctc_fr_bpe900_7k", "wav2vec2_ctc_fr_bpe1000_7k", "wav2vec2_ctc_fr_bpe1500_7k"]
-    sys = ["7k", "bpe50_7k", "bpe100_7k", "bpe150_7k", "bpe250_7k", "bpe500_7k", "bpe650_7k", "bpe750_7k", "bpe750_7k", "bpe900_7k", "bpe1000_7k", "bpe1500_7k"]
+    # systems = ["wav2vec2_ctc_fr_7k", "wav2vec2_ctc_fr_bpe50_7k", "wav2vec2_ctc_fr_bpe100_7k", "wav2vec2_ctc_fr_bpe150_7k", "wav2vec2_ctc_fr_bpe250_7k", "wav2vec2_ctc_fr_bpe500_7k", "wav2vec2_ctc_fr_bpe650_7k", "wav2vec2_ctc_fr_bpe750_7k", "wav2vec2_ctc_fr_bpe750_7k", "wav2vec2_ctc_fr_bpe900_7k", "wav2vec2_ctc_fr_bpe1000_7k", "wav2vec2_ctc_fr_bpe1500_7k"]
+    # sys = ["7k", "bpe50_7k", "bpe100_7k", "bpe150_7k", "bpe250_7k", "bpe500_7k", "bpe650_7k", "bpe750_7k", "bpe750_7k", "bpe900_7k", "bpe1000_7k", "bpe1500_7k"]
+    systems = ["wav2vec2_ctc_fr_7k", "wav2vec2_ctc_fr_bpe50_7k", "wav2vec2_ctc_fr_bpe100_7k", "wav2vec2_ctc_fr_bpe150_7k", "wav2vec2_ctc_fr_bpe250_7k", "wav2vec2_ctc_fr_bpe500_7k", "wav2vec2_ctc_fr_bpe750_7k", "wav2vec2_ctc_fr_bpe900_7k", "wav2vec2_ctc_fr_bpe1000_7k", "wav2vec2_ctc_fr_bpe1500_7k"]
+    sys = ["7k", "bpe50_7k", "bpe100_7k", "bpe150_7k", "bpe250_7k", "bpe500_7k", "bpe750_7k", "bpe900_7k", "bpe1000_7k", "bpe1500_7k"]
     system2sys = dict()
     for i in range(len(systems)):
         system2sys[systems[i]] = sys[i]
 
+    average_correlation = dict()
     for system1 in systems:
         print(system2sys[system1])
+        average_correlation[system2sys[system1]] = dict()
         for system2 in systems:
-            correlation(system1, system2, system2sys[system1], system2sys[system2], plot=False)
+            avg = correlation(system1, system2, system2sys[system1], system2sys[system2], plot=False)
+            average_correlation[system2sys[system1]][system2sys[system2]] = avg
+
+    heatmap_data = [[average_correlation[x][y] for x in sys] for y in sys]
+
+    plt.imshow(heatmap_data, cmap='viridis', interpolation='nearest')
+    plt.colorbar()
+    # add ticks
+    plt.xticks(np.arange(len(sys)), sys, rotation=45)
+    plt.yticks(np.arange(len(sys)), sys)
+    plt.show()
+    plt.savefig("figures/corr/heatmap.png")
