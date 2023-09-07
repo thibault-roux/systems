@@ -49,6 +49,7 @@ def plot_ctc_heatmap(system, vocab, normtype): # vocab = {token, char, all}, nor
                 useful_toks.add(tok)
         useful_toks = list(useful_toks)
     elif vocab == "partial":
+        print("partial")
         useful_toks = []
         # keep the rows where there is at least one value > 0.1
         tensor2 = np.exp(tensor)
