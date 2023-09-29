@@ -38,9 +38,8 @@ if __name__ == "__main__":
             vocab2 = vocabs[j]
             path1 = paths[i]
             path2 = paths[j]
-            if path1 != path2:
-                inside, length = compute_covering(path1, path2)
-                txt += str(inside/length*100) + ","
+            inside, length = compute_covering(path1, path2)
+            txt += str(inside/length*100) + ","
         txt = txt[:-1] + "\n"
 
     with open("coverage.txt", "w", encoding="utf8") as file:
