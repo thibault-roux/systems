@@ -26,12 +26,22 @@ if __name__ == "__main__":
     paths.append("wav2vec2_ctc_fr_bpe250_v3_7k/1234/save/250_bpe.vocab")
     paths.append("wav2vec2_ctc_fr_bpe750_v2_7k/1234/save/750_bpe.vocab")
     # modifier vocabs et ajouter le path complet en incluant les systèmes avec morphèmes
+    txt = ""
+    for v in vocabs:
+        txt += v + ","
+    txt = txt[:-1] + "\n"
+    
     for i in range(len(vocabs)):
+        vocab1 = vocabs[i]
+        txt += vocab1 + ","
         for j in range(len(vocabs)):
-            vocab1 = vocabs[i]
             vocab2 = vocabs[j]
             path1 = paths[i]
             path2 = paths[j]
             if path1 != path2:
                 inside, length = compute_covering(path1, path2)
-                print(vocab1, vocab2, inside/length*100)
+                txt += str(inside/length*100) + ","
+        txt = txt[:-1] + "\n"
+
+    with open("coverage.txt", "w", encoding="utf8") as file:
+        file.write(txt)
