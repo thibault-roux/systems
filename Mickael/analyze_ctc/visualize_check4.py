@@ -17,7 +17,7 @@ def load_dict():
     return ind2tok, tok2ind
 
 
-def compute_matrix(system, ind2tok, tok2ind):
+def compute_matrix(system, ind2tok, tok2ind, X=None):
     tensor = pickle.load(open("pickle3/tensor_" + system + ".pkl", "rb"))[0]
 
     sentence = " alors nous avons un"
@@ -31,7 +31,11 @@ def compute_matrix(system, ind2tok, tok2ind):
     for i in range(tensor.shape[0]):
         tensor_rank[i] = np.argsort(tensor[i])[::-1] # reverse the array
 
-    return tensor_rank
+    # si X non null
+    if X is None:
+        return tensor_rank
+    else:
+        return [tensor_rank[X]]
 
     # ici, je veux faire la heatmap sur les rangs de chaque token pour voir l'évolution au cours de l'entraînement
     # je peux soit plot la moyenne des segments, soit les afficher à la suite, soit choisir un segment au hasard
@@ -41,16 +45,17 @@ if __name__ == "__main__":
     ind2tok, tok2ind = load_dict()
 
 
-    systems = [str(i) for i in range(0, 200, 1)] # (0, 38000, 50)]
+    systems = [str(i) for i in range(0, 3000, 1)] # (0, 38000, 50)]
     # systems = ["wav2vec2_ctc_fr_7k", "wav2vec2_ctc_fr_bpe1500_7k"]
     matrix = np.array([])
     for system in systems:
         print(system)
-        map2 = compute_matrix(system, ind2tok, tok2ind)
+        map2 = compute_matrix(system, ind2tok, tok2ind, X=10)
         try:
             matrix = np.concatenate((matrix, map2), axis=0)
         except ValueError:
             matrix = map2
+
 
     token_lengths = [len(ind2tok[x]) for x in range(matrix.shape[1])]
     sorted_indices = np.argsort(token_lengths)
