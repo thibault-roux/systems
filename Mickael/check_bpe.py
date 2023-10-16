@@ -74,6 +74,7 @@ def percent_morph():
     morphemes = ["aa", "adam", "ae", "aen", "ai", "aï", "ail", "aim", "ain", "am", "an", "aon", "aou", "au", "aw", "ay", "aye", "bb", "ca", "cc", "cca", "cce", "cch", "cci", "cco", "ccu", "ccueil", "ccy", "ce", "ch", "ci", "co", "cqu", "ct", "cu", "cueil", "cy", "dd", "ds", "ea", "ean", "eau", "ect", "ed", "ee", "ée", "ef", "ei", "eil", "eim", "ein", "em", "emmm", "en", "enn", "ent", "er", "es", "eu", "eû", "ew", "ez", "ff", "ga", "ge", "geu", "geü", "gg", "gge", "ggi", "gh", "gi", "gn", "go", "gt", "gu", "gua", "gue", "guë", "güe", "gui", "ign", "iil", "il", "ill", "illaire", "ille", "illier", "im", "imm", "imma", "imme", "immi", "immo", "immu", "in", "ing", "ll", "lle", "mm", "mn", "nn", "oa", "oe", "oi", "oil", "om", "on", "ou", "ph", "pp", "ps", "pt", "qu", "qua", "qui", "rh", "rr", "rrh", "sc", "sca", "sce", "sch", "sci", "sco", "scu", "scy", "ss", "th", "tia", "tie", "tiel", "tien", "tient", "tieuse", "tieux", "tion", "tt", "tz", "uil", "um", "un", "uy", "ym", "yn"]
     tokenizer_type = ["sentencepiece", "bpe", "unigram"]
     systems = ["1000", "750", "500", "250"]
+    txt = ""
     for tokenizer in tokenizer_type:
         for system in systems:
             if tokenizer == "sentencepiece":
@@ -81,14 +82,21 @@ def percent_morph():
             elif tokenizer == "bpe":
                 filename = "results_lia_asr/wav2vec2_ctc_fr_bpe" + system + "_7k/1234/save/" + system + "_bpe.vocab"
             elif tokenizer == "unigram":
-                filename = "results_lia_asr/wav2vec2_ctc_fr_unigram" + system + "_7k/1234/save/" + system + "_unigram.vocab"
+                filename = "results_lia_asr/wav2vec2_ctc_fr_unigram" + system + "/1234/save/" + system + "_unigram.vocab"
+            else:
+                print("Tokenizer type not recognized")
+                exit()
             vocab = read_file(filename)
             # compute percentage of morphemes in the vocabulary
             morphemes_in_vocab = 0
             for morpheme in morphemes:
                 if morpheme in vocab:
                     morphemes_in_vocab += 1
-            print("Percentage of morphemes in vocabulary for system " + system + ": " + str(morphemes_in_vocab/len(morphemes)*100))
+            print(tokenizer + " " + system + ": " + str(morphemes_in_vocab/len(morphemes)*100))
+            txt += tokenizer + " " + system + ": " + str(morphemes_in_vocab/len(morphemes)*100) + "\n"
+
+    with open("results/morphemes.txt", "w") as f:
+        f.write(txt)
 
 
 
