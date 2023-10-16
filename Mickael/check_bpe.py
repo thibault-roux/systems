@@ -95,7 +95,7 @@ def percent_morph():
             print(tokenizer + " " + system + ": " + str(morphemes_in_vocab/len(morphemes)*100))
             txt += tokenizer + " " + system + ": " + str(morphemes_in_vocab/len(morphemes)*100) + "\n"
 
-    with open("results/morphemes.txt", "w") as f:
+    with open("results/covering.txt", "w") as f:
         f.write(txt)
 
 
