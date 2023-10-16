@@ -37,29 +37,29 @@ def previous_main():
 
 # plot histograms of token lengths for different BPE sizes
 if __name__ == "__main__":
-    data = dict()
+    dfs = []
     systems = ["250", "500", "750", "1000"]
     for system in systems:
         filename = "results_lia_asr/wav2vec2_ctc_fr_bpe" + system + "_7k/1234/save/" + system + "_bpe.vocab"
         vocab = read_file(filename)
         token_lengths = [len(token) for token in vocab]
-        data[system] = pd.DataFrame({'Token Length': token_lengths})
+        df = pd.DataFrame({'System': f'System {system}', 'Token Length': token_lengths})
+        dfs.append(df)
 
-    # Create subplots for each vocabulary
-    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(10, 6))
-    fig.suptitle('Token Length Distribution for Different Vocabularies')
+    # Combine DataFrames into a single DataFrame
+    combined_df = pd.concat(dfs)
 
-    # Plot histograms for each vocabulary
-    for i, (df, ax) in enumerate(zip([data["250"], data["500"], data["750"], data["1000"]], axes.flat)):
-        df['Token Length'].plot(kind='hist', ax=ax, bins=10)
-        ax.set_title(f'Vocabulary {i+1}')
-        ax.set_xlabel('Length of tokens')
-        ax.set_ylabel('Frequency')
+    # Create a histogram plot
+    plt.figure(figsize=(10, 6))
+    plt.hist([df['Token Length'] for df in dfs], bins=range(1, 12), rwidth=0.8, alpha=0.7, label=[df['System'].iloc[0] for df in dfs])
+    plt.xlabel('Token Length')
+    plt.ylabel('Frequency')
+    plt.xticks(range(1, 12))
+    plt.legend()
 
-    # Adjust the layout
-    plt.tight_layout()
-    plt.subplots_adjust(top=0.85)
+    # Show the plot
+    plt.title('Token Length Distribution for Different Vocabularies')
 
     # Show the plot
     plt.show()
-    plt.savefig("hist_token_length.png")
+    plt.savefig("plots/hist_token_length.png")
