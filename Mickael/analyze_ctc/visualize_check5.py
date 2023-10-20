@@ -113,7 +113,8 @@ def process(min_batch, max_batch, step_batch, mult, figx, figy):
     plt.ylabel('Token Length')
     plt.title('Heatmap of Average per Length')
     plt.yticks(np.arange(len(average_per_length)), np.arange(1, len(average_per_length)+1))
-    plt.xticks(np.arange(len(x_ticks)), x_ticks)
+    label_interval = int(len(x_ticks)/5)
+    plt.xticks(np.arange(0, len(x_ticks), label_interval), [x_ticks[i] for i in range(0, len(x_ticks), label_interval)])
     plt.show()
     plt.savefig("results/many_rank_heatmap_average_per_length2.png")
 
@@ -121,7 +122,7 @@ def process(min_batch, max_batch, step_batch, mult, figx, figy):
 
 
 if __name__ == "__main__":
-    process(min_batch=0, max_batch=36250, step_batch=50*300, mult=10, figx=10, figy=14)
+    process(min_batch=0, max_batch=36250, step_batch=50, mult=10, figx=10, figy=14)
 
     # Every 50 batch, we infer the ASR system on 20 audio segments.
     # Instead of using the output of the ASR system, we compute the rank of the output.
