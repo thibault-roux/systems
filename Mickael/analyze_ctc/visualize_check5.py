@@ -41,7 +41,7 @@ def process(min_batch, max_batch, step_batch, mult, figx, figy):
 
 
     systems = [str(i) for i in range(min_batch, max_batch, step_batch)] # (0, 36250, 50)]
-    matrix = np.array([])
+    matrix = np.empty((900, 0))
     for system in systems:
         print(system)
         minimatrix = np.array([])
@@ -53,15 +53,15 @@ def process(min_batch, max_batch, step_batch, mult, figx, figy):
                 minimatrix = np.array(map2)
         
         minimatrix = minimatrix.mean(axis=0)
-        matrix = np.concatenate((matrix, minimatrix), axis=0)
-        
+        matrix = np.concatenate((matrix, minimatrix.reshape(-1, 1)), axis=1)
 
-    token_lengths = [len(ind2tok[x]) for x in range(matrix.shape[1])]
+
+    token_lengths = [len(ind2tok[x]) for x in range(matrix.shape[0])]
     sorted_indices = np.argsort(token_lengths)
-    sorted_matrix = matrix[:, sorted_indices] # sort
+    sorted_matrix = matrix[sorted_indices, :] # sort
 
-
-    sorted_matrix = sorted_matrix.T
+    #sorted_matrix = sorted_matrix.T
+    
     # Create the heatmap
     
     # plt.figure(figsize=(figx*mult, figy*mult))  # Adjust the figure size as needed
@@ -75,7 +75,7 @@ def process(min_batch, max_batch, step_batch, mult, figx, figy):
         except KeyError:
             counter[token_lengths[i]] = 1
 
-    print(sorted_matrix.shape) # (900, 60) car 900 tokens et 3*20 audio segments (on a prédit uniquement à 3 état neuronal)
+    # print(sorted_matrix.shape) # (900, 3) car 900 tokens et 3 * 20 audio segments moyenné (on a prédit uniquement à 3 état neuronal)
 
     # Add horizontal grid lines to separate tokens
     average_per_length = dict()
@@ -85,12 +85,12 @@ def process(min_batch, max_batch, step_batch, mult, figx, figy):
         previous = previous + count
         plt.axhline(y=previous, color='red', linewidth=4)
         # print(previous, count, previous+count)
+        # print(sorted_matrix[previous:previous+count].shape)
         subset = sorted_matrix[previous:previous+count]
         average_per_length[token_length] = subset.mean(axis=0)
-        if token_length == 1:
-            print(average_per_length[token_length])
-            print(average_per_length[token_length].shape)
-        # input()
+        # if token_length == 1:
+        #     print(average_per_length[token_length])
+        #     print(average_per_length[token_length].shape)
 
 
 
@@ -111,6 +111,7 @@ def process(min_batch, max_batch, step_batch, mult, figx, figy):
     plt.xlabel('Time Step')
     plt.ylabel('Token Length')
     plt.title('Heatmap of Average per Length')
+    # plt.xticks(np.arange(0, 36251, 1250))
     plt.show()
     plt.savefig("results/many_rank_heatmap_average_per_length2.png")
 
