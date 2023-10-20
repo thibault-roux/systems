@@ -39,7 +39,7 @@ def process(min_batch, max_batch, step_batch, mult, figx, figy):
     colors = [(0, 'white'), ((1 - np.log(2))*1, 'darkblue'), (1, 'black')]
     custom_cmap = LinearSegmentedColormap.from_list('custom_colormap', colors, N=256)
 
-
+    x_ticks = [i for i in range(min_batch, max_batch, step_batch)]
     systems = [str(i) for i in range(min_batch, max_batch, step_batch)] # (0, 36250, 50)]
     matrix = np.empty((900, 0))
     for system in systems:
@@ -106,12 +106,14 @@ def process(min_batch, max_batch, step_batch, mult, figx, figy):
 
     # Extract data and convert it into a 2D NumPy array
     data = np.array(list(average_per_length.values()))
+    print("data.shape:", data.shape)
     plt.imshow(data, cmap='viridis', aspect='auto', interpolation='none')
     plt.colorbar(label='Value')
     plt.xlabel('Time Step')
     plt.ylabel('Token Length')
     plt.title('Heatmap of Average per Length')
-    # plt.xticks(np.arange(0, 36251, 1250))
+    plt.yticks(np.arange(len(average_per_length)), np.arange(1, len(average_per_length)+1))
+    plt.xticks(np.arange(len(x_ticks)), x_ticks)
     plt.show()
     plt.savefig("results/many_rank_heatmap_average_per_length2.png")
 
