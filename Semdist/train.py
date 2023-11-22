@@ -9,6 +9,9 @@ from speechbrain.tokenizers.SentencePiece import SentencePiece
 from speechbrain.utils.data_utils import undo_padding
 from speechbrain.utils.distributed import run_on_main
 
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+
 """Recipe for training a sequence-to-sequence ASR system with CommonVoice.
 The system employs a wav2vec2 encoder and a CTC decoder.
 Decoding is performed with greedy decoding (will be extended to beam search).
@@ -38,14 +41,19 @@ logger = logging.getLogger(__name__)
 torch.multiprocessing.set_sharing_strategy('file_system')
 # torchaudio.set_audio_backend("soundfile")
 
+def semdist(ref, hyp, memory):
+    model = memory
+    ref_projection = model.encode(ref).reshape(1, -1)
+    hyp_projection = model.encode(hyp).reshape(1, -1)
+    score = cosine_similarity(ref_projection, hyp_projection)[0][0]
+    return (1-score)*100 # lower is better
+
 # Define training procedure
 class ASR(sb.core.Brain):
     # overwrite speechbrain constructor for Brain class
     def __init__(self, modules, hparams, run_opts, checkpointer):
-        super().__init__(modules, hparams, run_opts, checkpointer)
-        
-        # load sentence-camembert model for semdist
-        sentence_model = # have to do import and installation
+        super().__init__(hparams=hparams, run_opts=run_opts, checkpointer=checkpointer)
+        self.model = SentenceTransformer('dangvantuan/sentence-camembert-large')
 
     def compute_forward(self, batch, stage):
         """Forward computations from the waveform batches to the output probabilities."""
@@ -86,33 +94,22 @@ class ASR(sb.core.Brain):
         # print(loss)
         # print(loss.shape) # batch_size
 
-        sequence = sb.decoders.ctc_greedy_decode(
-            p_ctc, wav_lens, blank_id=self.hparams.blank_index
-        )
-        predicted_words = self.tokenizer(sequence, task="decode_from_list")
-        target_words = undo_padding(tokens, tokens_lens)
-        target_words = self.tokenizer(target_words, task="decode_from_list")
-        # predicted_words: list of 'batch_size' sentences predicted by system (sentences are list of words)
-        # target_words: list of 'batch_size' sentences target (sentences are list of words)
-
-        semdist_scores = []
-        for i in range(len(predicted_words)):
-            reference = " ".join(target_words[i])
-            hypothesis = " ".join(predicted_words[i])
-            # print("reference:", reference)
-            # print("hypothesis:", hypothesis)
-            # semdist_scores.append(self.hparams.semdist(reference, hypothesis))
-
-        # semdist_weight = sum(semdist_scores) / len(semdist_scores)
-        semdist_weight = 0.5
-        print()
-        print("semdist_weight:", semdist_weight)
-        print("loss:", loss)
-        loss = loss * semdist_weight # this can cause troubles as the gradient is changed
-        print("loss:", loss)
-        print()
-
-        exit(-1)
+        if self.hparams.epoch_counter.current > 5:
+            sequence = sb.decoders.ctc_greedy_decode(
+                p_ctc, wav_lens, blank_id=self.hparams.blank_index
+            )
+            predicted_words = self.tokenizer(sequence, task="decode_from_list")
+            target_words = undo_padding(tokens, tokens_lens)
+            target_words = self.tokenizer(target_words, task="decode_from_list")
+            # predicted_words: list of 'batch_size' sentences predicted by system (sentences are list of words)
+            # target_words: list of 'batch_size' sentences target (sentences are list of words)
+            semdist_scores = []
+            for i in range(len(predicted_words)):
+                reference = " ".join(target_words[i])
+                hypothesis = " ".join(predicted_words[i])
+                semdist_scores.append(self.hparams.semdist(reference, hypothesis))
+            semdist_weight = sum(semdist_scores) / len(semdist_scores)
+            loss = loss * semdist_weight # this can cause troubles as the gradient is changed
 
         if stage != sb.Stage.TRAIN:
             # Decode token terms to words
