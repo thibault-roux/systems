@@ -46,7 +46,7 @@ def semdist(ref, hyp, memory):
     ref_projection = model.encode(ref).reshape(1, -1)
     hyp_projection = model.encode(hyp).reshape(1, -1)
     score = cosine_similarity(ref_projection, hyp_projection)[0][0]
-    return (1-score)*100 # lower is better
+    return 2+score # higher is better between 1 and 3
 
 # Define training procedure
 class ASR(sb.core.Brain):
@@ -94,7 +94,8 @@ class ASR(sb.core.Brain):
         # print(loss)
         # print(loss.shape) # batch_size
 
-        if self.hparams.epoch_counter.current > -1:
+        semdist_weight = 1 # default value
+        if self.hparams.epoch_counter.current > 5:
             sequence = sb.decoders.ctc_greedy_decode(
                 p_ctc, wav_lens, blank_id=self.hparams.blank_index
             )
@@ -105,15 +106,15 @@ class ASR(sb.core.Brain):
             # target_words: list of 'batch_size' sentences target (sentences are list of words)
             semdist_scores = []
             for i in range(len(predicted_words)):
-                if len(target_words[i]) < 10 and len(predicted_words[i]) < 10:
+                if len(target_words[i]) < 25 and len(predicted_words[i]) < 25:
                     reference = " ".join(target_words[i])
                     hypothesis = " ".join(predicted_words[i])
                     semdist_scores.append(semdist(reference, hypothesis, self.sentencemodel))
             if len(semdist_scores) == 0:
-                semdist_weight = 0
+                semdist_weight = 1
             else:
                 semdist_weight = sum(semdist_scores) / len(semdist_scores)
-            loss = loss + semdist_weight # this can cause troubles as the gradient is changed
+        loss = loss/semdist_weight # this can cause troubles as the gradient is changed
 
         if stage != sb.Stage.TRAIN:
             # Decode token terms to words
