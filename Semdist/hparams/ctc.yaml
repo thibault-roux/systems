@@ -8,7 +8,7 @@
 seed: 1234
 # seed: 1239
 __set_seed: !!python/object/apply:torch.manual_seed [!ref <seed>]
-output_folder: !ref results_lia_asr/semdist/<seed>
+output_folder: !ref results_lia_asr/ctc/<seed>
 wer_file: !ref <output_folder>/wer_test.txt
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
@@ -21,7 +21,7 @@ wav2vec2_hub: LeBenchmark/wav2vec2-FR-7K-large
 # data_folder: /users/ylabrak/MedicalASR/ZenidocDataset/tsv_cropped_ether  # Remote
 data_folder: /users/troux/these/expe/end-to-end/Mickael  # Local
 
-train_csv: !ref <data_folder>/data/train.csv
+train_csv: !ref <data_folder>/data/train_filter.csv
 valid_csv: !ref <data_folder>/data/valid.csv
 test_csv: !ref <data_folder>/data/test.csv
 
@@ -61,7 +61,7 @@ dynamic_batch_sampler:
     # num_buckets: 20
 
 # Training parameters
-number_of_epochs: 50
+number_of_epochs: 2
 lr: 1.0
 lr_wav2vec: 0.0001
 

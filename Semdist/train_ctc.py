@@ -194,8 +194,6 @@ class ASR(sb.core.Brain):
             )
 
     def save_test_data(self, test_data):
-        print(self.hparams.test_dataloader_options)
-        exit()
         self.test_data = test_data
 
     def init_optimizers(self):
