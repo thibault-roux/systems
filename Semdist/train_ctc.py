@@ -137,9 +137,9 @@ class ASR(sb.core.Brain):
 
     def on_stage_start(self, stage, epoch):
         """Gets called at the beginning of each epoch"""
-        if stage != sb.Stage.TRAIN:
-            self.cer_metric = self.hparams.cer_computer()
-            self.wer_metric = self.hparams.error_rate_computer()
+        # if stage != sb.Stage.TRAIN:
+        self.cer_metric = self.hparams.cer_computer()
+        self.wer_metric = self.hparams.error_rate_computer()
 
     def on_stage_end(self, stage, stage_loss, epoch):
         """Gets called at the end of an epoch."""
@@ -178,14 +178,25 @@ class ASR(sb.core.Brain):
             self.checkpointer.save_and_keep_only(
                 meta={"WER": stage_stats["WER"]}, min_keys=["WER"],
             )
-        # elif stage == sb.Stage.TEST:
-        self.hparams.train_logger.log_stats(
-            stats_meta={"Epoch loaded": self.hparams.epoch_counter.current},
-            test_stats=stage_stats,
-        )
-        output_file = self.hparams["output_folder"] + "/wer_test_" + self.hparams.epoch_counter.current + ".txt"
-        with open(output_file, "w") as w:
-            self.wer_metric.write_stats(w)
+        elif stage == sb.Stage.TEST:
+            self.hparams.train_logger.log_stats(
+                stats_meta={"Epoch loaded": self.hparams.epoch_counter.current},
+                test_stats=stage_stats,
+            )
+            with open(self.hparams.wer_file, "w") as w:
+                self.wer_metric.write_stats(w)
+        elif stage == sb.Stage.TRAIN:
+            output_file = self.hparams.output_folder + "/wer_test_" + str(self.hparams.epoch_counter.current) + ".txt"
+            self.evaluate(
+                self.test_data,
+                min_key="WER",
+                test_loader_kwargs=self.hparams.test_dataloader_options,
+            )
+
+    def save_test_data(self, test_data):
+        print(self.hparams.test_dataloader_options)
+        exit()
+        self.test_data = test_data
 
     def init_optimizers(self):
         "Initializes the wav2vec2 optimizer and model optimizer"
@@ -267,7 +278,15 @@ def dataio_prepare(hparams, tokenizer):
     @sb.utils.data_pipeline.takes("wav")
     @sb.utils.data_pipeline.provides("sig")
     def audio_pipeline(wav):
-        info = torchaudio.info(wav)
+        # info = torchaudio.info(wav)
+        try:
+            info = torchaudio.info(wav)
+        except RuntimeError:
+            print("Error loading file: ", wav)
+            with open("error_files.txt", "a") as f:
+                f.write(wav + "\n")
+            wav = "/users/troux/corpus/Ester2/clips/20001011_0930_1030_rfi_31194.wav"
+            info = torchaudio.info(wav)
         sig = sb.dataio.dataio.read_audio(wav)
         resampled = torchaudio.transforms.Resample(
             info.sample_rate, hparams["sample_rate"],
@@ -397,6 +416,8 @@ if __name__ == "__main__":
         run_opts=run_opts,
         checkpointer=hparams["checkpointer"],
     )
+
+    asr_brain.save_test_data(test_data)
 
     print("£"*50)
 
