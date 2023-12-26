@@ -8,7 +8,7 @@
 seed: 1234
 # seed: 1239
 __set_seed: !!python/object/apply:torch.manual_seed [!ref <seed>]
-output_folder: !ref results_lia_asr/ctc/<seed>
+output_folder: !ref results_lia_asr/semdist/<seed>
 wer_file: !ref <output_folder>/wer_test.txt
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
@@ -19,15 +19,11 @@ wav2vec2_hub: LeBenchmark/wav2vec2-FR-7K-large
 
 # Data files
 # data_folder: /users/ylabrak/MedicalASR/ZenidocDataset/tsv_cropped_ether  # Remote
-data_folder: /users/rouvier/yanis_data/LIADataset/tsv_cropped_ether  # Local
-train_tsv_file: !ref <data_folder>/train.tsv  # Standard CommonVoice .tsv files
-dev_tsv_file: !ref <data_folder>/dev.tsv  # Standard CommonVoice .tsv files
-test_tsv_file: !ref <data_folder>/test.tsv  # Standard CommonVoice .tsv files
-accented_letters: True
-language: fr # use 'it' for Italian, 'rw' for Kinyarwanda, 'en' for english
-train_csv: !ref <save_folder>/train.csv
-valid_csv: !ref <save_folder>/dev.csv
-test_csv: !ref /users/troux/these/expe/end-to-end/Mickael/data/test.csv
+data_folder: /users/troux/these/expe/end-to-end/Mickael  # Local
+
+train_csv: !ref <data_folder>/data/train.csv
+valid_csv: !ref <data_folder>/data/valid.csv
+test_csv: !ref <data_folder>/data/test.csv
 
 skip_prep: False # Skip data preparation
 # skip_prep: True # Skip data preparation
