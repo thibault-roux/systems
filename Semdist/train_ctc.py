@@ -137,9 +137,9 @@ class ASR(sb.core.Brain):
 
     def on_stage_start(self, stage, epoch):
         """Gets called at the beginning of each epoch"""
-        # if stage != sb.Stage.TRAIN:
-        self.cer_metric = self.hparams.cer_computer()
-        self.wer_metric = self.hparams.error_rate_computer()
+        if stage != sb.Stage.TRAIN:
+            self.cer_metric = self.hparams.cer_computer()
+            self.wer_metric = self.hparams.error_rate_computer()
 
     def on_stage_end(self, stage, stage_loss, epoch):
         """Gets called at the end of an epoch."""
@@ -175,9 +175,10 @@ class ASR(sb.core.Brain):
                 train_stats=self.train_stats,
                 valid_stats=stage_stats,
             )
-            self.checkpointer.save_and_keep_only(
-                meta={"WER": stage_stats["WER"]}, min_keys=["WER"],
-            )
+            #self.checkpointer.save_and_keep_only(
+            #    meta={"WER": stage_stats["WER"]}, min_keys=["WER"],
+            #)
+            self.checkpointer.save_checkpoint(meta={"WER": stage_stats["WER"]})
         elif stage == sb.Stage.TEST:
             self.hparams.train_logger.log_stats(
                 stats_meta={"Epoch loaded": self.hparams.epoch_counter.current},
@@ -185,16 +186,6 @@ class ASR(sb.core.Brain):
             )
             with open(self.hparams.wer_file, "w") as w:
                 self.wer_metric.write_stats(w)
-        elif stage == sb.Stage.TRAIN:
-            output_file = self.hparams.output_folder + "/wer_test_" + str(self.hparams.epoch_counter.current) + ".txt"
-            self.evaluate(
-                self.test_data,
-                min_key="WER",
-                test_loader_kwargs=self.hparams.test_dataloader_options,
-            )
-
-    def save_test_data(self, test_data):
-        self.test_data = test_data
 
     def init_optimizers(self):
         "Initializes the wav2vec2 optimizer and model optimizer"
@@ -276,15 +267,7 @@ def dataio_prepare(hparams, tokenizer):
     @sb.utils.data_pipeline.takes("wav")
     @sb.utils.data_pipeline.provides("sig")
     def audio_pipeline(wav):
-        # info = torchaudio.info(wav)
-        try:
-            info = torchaudio.info(wav)
-        except RuntimeError:
-            print("Error loading file: ", wav)
-            with open("error_files.txt", "a") as f:
-                f.write(wav + "\n")
-            wav = "/users/troux/corpus/Ester2/clips/20001011_0930_1030_rfi_31194.wav"
-            info = torchaudio.info(wav)
+        info = torchaudio.info(wav)
         sig = sb.dataio.dataio.read_audio(wav)
         resampled = torchaudio.transforms.Resample(
             info.sample_rate, hparams["sample_rate"],
@@ -362,7 +345,7 @@ if __name__ == "__main__":
     sb.utils.distributed.ddp_init_group(run_opts)
 
     # Dataset preparation (parsing CommonVoice)
-    # from zenidoc_prepare import prepare_zenidoc  # noqa
+    from zenidoc_prepare import prepare_zenidoc  # noqa
     # from common_voice_prepare import prepare_common_voice  # noqa
 
     # Create experiment directory
@@ -373,20 +356,20 @@ if __name__ == "__main__":
     )
 
     # Due to DDP, we do the preparation ONLY on the main python process
-    # run_on_main(
-    #     prepare_zenidoc,
-    #     # prepare_common_voice,
-    #     kwargs={
-    #         "data_folder": hparams["data_folder"],
-    #         "save_folder": hparams["save_folder"],
-    #         "train_tsv_file": hparams["train_tsv_file"],
-    #         "dev_tsv_file": hparams["dev_tsv_file"],
-    #         "test_tsv_file": hparams["test_tsv_file"],
-    #         "accented_letters": hparams["accented_letters"],
-    #         "language": hparams["language"],
-    #         "skip_prep": hparams["skip_prep"],
-    #     },
-    # )
+    run_on_main(
+        prepare_zenidoc,
+        # prepare_common_voice,
+        kwargs={
+            "data_folder": hparams["data_folder"],
+            "save_folder": hparams["save_folder"],
+            "train_tsv_file": hparams["train_tsv_file"],
+            "dev_tsv_file": hparams["dev_tsv_file"],
+            "test_tsv_file": hparams["test_tsv_file"],
+            "accented_letters": hparams["accented_letters"],
+            "language": hparams["language"],
+            "skip_prep": hparams["skip_prep"],
+        },
+    )
 
     print("@"*50)
 
@@ -414,8 +397,6 @@ if __name__ == "__main__":
         run_opts=run_opts,
         checkpointer=hparams["checkpointer"],
     )
-
-    asr_brain.save_test_data(test_data)
 
     print("£"*50)
 
@@ -449,7 +430,7 @@ if __name__ == "__main__":
         )
 
     # Test
-    asr_brain.hparams.wer_file = hparams["output_folder"] + "/wer_test_FINAL.txt"
+    asr_brain.hparams.wer_file = hparams["output_folder"] + "/wer_test.txt"
     asr_brain.evaluate(
         test_data,
         min_key="WER",
