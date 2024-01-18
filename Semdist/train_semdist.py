@@ -9,6 +9,9 @@ from speechbrain.tokenizers.SentencePiece import SentencePiece
 from speechbrain.utils.data_utils import undo_padding
 from speechbrain.utils.distributed import run_on_main
 
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+
 """Recipe for training a sequence-to-sequence ASR system with CommonVoice.
 The system employs a wav2vec2 encoder and a CTC decoder.
 Decoding is performed with greedy decoding (will be extended to beam search).
@@ -38,8 +41,20 @@ logger = logging.getLogger(__name__)
 torch.multiprocessing.set_sharing_strategy('file_system')
 # torchaudio.set_audio_backend("soundfile")
 
+def semdist(ref, hyp, memory):
+    model = memory
+    ref_projection = model.encode(ref).reshape(1, -1)
+    hyp_projection = model.encode(hyp).reshape(1, -1)
+    score = cosine_similarity(ref_projection, hyp_projection)[0][0]
+    return 2+score # higher is better between 1 and 3
+
 # Define training procedure
 class ASR(sb.core.Brain):
+    # overwrite speechbrain constructor for Brain class
+    def __init__(self, modules, hparams, run_opts, checkpointer):
+        super().__init__(modules=modules, hparams=hparams, run_opts=run_opts, checkpointer=checkpointer)
+        self.sentencemodel = SentenceTransformer('dangvantuan/sentence-camembert-large')
+
     def compute_forward(self, batch, stage):
         """Forward computations from the waveform batches to the output probabilities."""
 
@@ -70,6 +85,27 @@ class ASR(sb.core.Brain):
         tokens, tokens_lens = batch.tokens
 
         loss = self.hparams.ctc_cost(p_ctc, tokens, wav_lens, tokens_lens)
+
+        semdist_weight = 1 # default value
+        if self.hparams.epoch_counter.current > 1:
+            sequence = sb.decoders.ctc_greedy_decode(
+                p_ctc, wav_lens, blank_id=self.hparams.blank_index
+            )
+            predicted_words = self.tokenizer(sequence, task="decode_from_list")
+            target_words = undo_padding(tokens, tokens_lens)
+            target_words = self.tokenizer(target_words, task="decode_from_list")
+            # predicted_words: list of 'batch_size' sentences predicted by system (sentences are list of words)
+            # target_words: list of 'batch_size' sentences target (sentences are list of words)
+            weights = []
+            for i in range(len(predicted_words)):
+                if len(target_words[i]) < 60 and len(predicted_words[i]) < 60:
+                    reference = " ".join(target_words[i])
+                    hypothesis = " ".join(predicted_words[i])
+                    weights.append(semdist(reference, hypothesis, self.sentencemodel))
+                else:
+                    weights.append(2)
+        divisor_values = torch.tensor(weights, device='cuda:0')
+        loss = loss / divisor_values
 
         if stage != sb.Stage.TRAIN:
             # Decode token terms to words

@@ -88,17 +88,16 @@ class ASR(sb.core.Brain):
             target_words = self.tokenizer(target_words, task="decode_from_list")
             # predicted_words: list of 'batch_size' sentences predicted by system (sentences are list of words)
             # target_words: list of 'batch_size' sentences target (sentences are list of words)
-            semdist_scores = []
+            weights = []
             for i in range(len(predicted_words)):
-                if len(target_words[i]) < 25 and len(predicted_words[i]) < 25:
+                if len(target_words[i]) < 60 and len(predicted_words[i]) < 60:
                     reference = " ".join(target_words[i])
                     hypothesis = " ".join(predicted_words[i])
-                    semdist_scores.append(word_error_rate(reference, hypothesis))
-            if len(semdist_scores) == 0:
-                semdist_weight = 1
-            else:
-                semdist_weight = sum(semdist_scores) / len(semdist_scores)
-        loss = loss/semdist_weight # this can cause troubles as the gradient is changed
+                    weights.append(word_error_rate(reference, hypothesis))
+                else:
+                    weights.append(5)
+        divisor_values = torch.tensor(weights, device='cuda:0')
+        loss = loss / divisor_values
 
         if stage != sb.Stage.TRAIN:
             # Decode token terms to words
