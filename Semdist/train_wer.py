@@ -78,7 +78,7 @@ class ASR(sb.core.Brain):
         tokens_eos, tokens_eos_lens = batch.tokens_eos
         tokens, tokens_lens = batch.tokens
 
-        loss = self.hparams.ctc_cost(p_ctc, tokens, wav_lens, tokens_lens)
+        loss = self.hparams.ctc_cost(p_ctc, tokens, wav_lens, tokens_lens, reduction="none")
 
         semdist_weight = 1 # default value
         if self.hparams.epoch_counter.current > 1:
@@ -97,9 +97,11 @@ class ASR(sb.core.Brain):
                     hypothesis = " ".join(predicted_words[i])
                     weights.append(word_error_rate(reference, hypothesis))
                 else:
-                    weights.append(5)
+                    weights.append(2)
         divisor_values = torch.tensor(weights, device='cuda:0')
-        loss = loss / divisor_values
+        loss = loss / divisor_values # divide by each element
+        # average the loss to have one value
+        loss = loss.mean()
 
         if stage != sb.Stage.TRAIN:
             # Decode token terms to words

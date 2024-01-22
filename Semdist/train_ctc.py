@@ -69,7 +69,9 @@ class ASR(sb.core.Brain):
         tokens_eos, tokens_eos_lens = batch.tokens_eos
         tokens, tokens_lens = batch.tokens
 
-        loss = self.hparams.ctc_cost(p_ctc, tokens, wav_lens, tokens_lens)
+        loss = self.hparams.ctc_cost(p_ctc, tokens, wav_lens, tokens_lens, reduction="none")
+        # average the loss to have one value
+        loss = loss.mean()
 
         if stage != sb.Stage.TRAIN:
             # Decode token terms to words
