@@ -23,7 +23,7 @@ data_folder: /users/troux/these/expe/end-to-end/Mickael  # Local
 
 train_csv: !ref <data_folder>/data/train_filter.csv
 valid_csv: !ref <data_folder>/data/valid.csv
-test_csv: !ref <data_folder>/data/test.csv
+test_csv: !ref <data_folder>/data/upper_test.csv
 
 skip_prep: False # Skip data preparation
 # skip_prep: True # Skip data preparation
@@ -61,7 +61,7 @@ dynamic_batch_sampler:
     # num_buckets: 20
 
 # Training parameters
-number_of_epochs: 2
+number_of_epochs: 50
 lr: 1.0
 lr_wav2vec: 0.0001
 
@@ -97,7 +97,7 @@ test_dataloader_options:
 # token_type: bpe  # ["unigram", "bpe", "char"]
 # token_type: unigram  # ["unigram", "bpe", "char"]
 token_type: unigram  # ["unigram", "bpe", "char"]
-token_output: 250
+token_output: 150
 character_coverage: 1.0
 
 # Model parameters
@@ -110,7 +110,7 @@ freeze_wav2vec: False
 # Outputs
 # output_neurons: 60 # Char
 # output_neurons: 53 # Char
-output_neurons: 250 # Char
+output_neurons: 150 # Char
 # output_neurons: 67  # Chars
 # output_neurons: 5_000  # BPE
 # output_neurons: 76  # BPE size, index(blank/eos/bos) = 0
