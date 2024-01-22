@@ -41,9 +41,11 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 # torchaudio.set_audio_backend("soundfile")
 
 def word_error_rate(ref, hyp):
+    if ref == hyp:
+        return 3
     score = jiwer.wer(ref, hyp) # for now lower is better
-    score = 1 + 9/(score+1) # project score between 10 and 1 in a higher is better
-    return score # higher is better between 1 and 10
+    score = 1 + 2/(score+1) # project score between 3 and 1 in a higher is better
+    return score # higher is better between 1 and 3
 
 # Define training procedure
 class ASR(sb.core.Brain):

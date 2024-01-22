@@ -42,6 +42,8 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 # torchaudio.set_audio_backend("soundfile")
 
 def semdist(ref, hyp, memory):
+    if ref == hyp:
+        return 3
     model = memory
     ref_projection = model.encode(ref).reshape(1, -1)
     hyp_projection = model.encode(hyp).reshape(1, -1)
