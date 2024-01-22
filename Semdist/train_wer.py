@@ -98,8 +98,8 @@ class ASR(sb.core.Brain):
                     weights.append(word_error_rate(reference, hypothesis))
                 else:
                     weights.append(2)
-        divisor_values = torch.tensor(weights, device='cuda:0')
-        loss = loss / divisor_values # divide by each element
+            divisor_values = torch.tensor(weights, device='cuda:0')
+            loss = loss / divisor_values # divide by each element
         # average the loss to have one value
         loss = loss.mean()
 
