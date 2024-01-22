@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name=train_semdist
+#SBATCH --job-name=train_wer
 #SBATCH --partition=gpu
 #SBATCH --gpus-per-node=1
 #SBATCH --mem=40G
 #SBATCH --constraint='GPURAM_Min_24GB'
-#SBATCH --output=output/train_semdist2.txt
+#SBATCH --output=output/train_wer2.txt
 #SBATCH --mail-type=END,FAIL
 #SBATCH --time=7-01:30:00
 #SBATCH --exclude=helios,eris
@@ -12,4 +12,4 @@
 
 
 
-python train_semdist.py hparams/semdist.yaml
+python train_wer.py hparams/wer.yaml
