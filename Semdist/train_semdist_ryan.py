@@ -43,14 +43,14 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 
 def semdist(ref, hyp, memory):
     if ref == hyp:
-        score
+        score = 1
     else:
         model = memory
         ref_projection = model.encode(ref).reshape(1, -1)
         hyp_projection = model.encode(hyp).reshape(1, -1)
         score = cosine_similarity(ref_projection, hyp_projection)[0][0]
     w = 1 - max(0.0000001, score)
-    return w # higher is better between 1 and 3
+    return w
 
 # Define training procedure
 class ASR(sb.core.Brain):
