@@ -38,6 +38,12 @@ logger = logging.getLogger(__name__)
 torch.multiprocessing.set_sharing_strategy('file_system')
 # torchaudio.set_audio_backend("soundfile")
 
+def custom_predicate(checkpoint):
+    # with open("existing_checkpoints.txt", "a") as f:
+    #     f.write(str(checkpoint.path).split("/")[-1] + "\n")
+    if str(checkpoint.path) == hparams["ckpt_path"]:
+        return True
+
 # Define training procedure
 class ASR(sb.core.Brain):
     def compute_forward(self, batch, stage):
@@ -128,6 +134,28 @@ class ASR(sb.core.Brain):
 
         return loss.detach()
 
+
+    def on_evaluate_start(self, max_key=None, min_key=None):
+
+        # ckpt_predicate = self.checkpointer.list_checkpoints()
+        # print("type(ckpt_predicate[0]): ", type(ckpt_predicate[0]))
+        # print("ckpt_predicate[0].path: ", ckpt_predicate[0].path)
+
+        # chosen_ckpt_predicate = []
+        # for ckpt in ckpt_predicate:
+        #     if ckpt.path == hparams["ckpt_path"]:
+        #         chosen_ckpt_predicate.append(ckpt)
+        #         break
+
+        # Recover best checkpoint for evaluation
+        if self.checkpointer is not None:
+            loaded_checkpoint = self.checkpointer.recover_if_possible(
+                max_key=max_key,
+                min_key=min_key,
+                device=torch.device(self.device),
+                ckpt_predicate=custom_predicate,
+            )
+
     def evaluate_batch(self, batch, stage):
         """Computations needed for validation/test batches"""
         predictions = self.compute_forward(batch, stage=stage)
@@ -175,9 +203,10 @@ class ASR(sb.core.Brain):
                 train_stats=self.train_stats,
                 valid_stats=stage_stats,
             )
-            self.checkpointer.save_and_keep_only(
-                meta={"WER": stage_stats["WER"]}, min_keys=["WER"],
-            )
+            #self.checkpointer.save_and_keep_only(
+            #    meta={"WER": stage_stats["WER"]}, min_keys=["WER"],
+            #)
+            self.checkpointer.save_checkpoint(meta={"WER": stage_stats["WER"]})
         elif stage == sb.Stage.TEST:
             self.hparams.train_logger.log_stats(
                 stats_meta={"Epoch loaded": self.hparams.epoch_counter.current},
@@ -339,6 +368,8 @@ if __name__ == "__main__":
     with open(hparams_file) as fin:
         hparams = load_hyperpyyaml(fin, overrides)
 
+    hparams["ckpt_path"] = hparams["save_folder"] + "/" +  str(hparams["ckpt_path"])
+
     # If --distributed_launch then
     # create ddp_group with the right communication protocol
     sb.utils.distributed.ddp_init_group(run_opts)
@@ -397,6 +428,10 @@ if __name__ == "__main__":
         checkpointer=hparams["checkpointer"],
     )
 
+    # print("hparams['test_dataloader_options']: ", hparams["test_dataloader_options"])
+    # print("hparams['test_dataloader_options']['batch_size']: ", hparams["test_dataloader_options"]["batch_size"])
+    # exit(-1)
+
     print("£"*50)
 
     # Adding objects to trainer.
@@ -429,8 +464,7 @@ if __name__ == "__main__":
         )"""
 
     # Test
-    asr_brain.hparams.wer_file = hparams["output_folder"] + "/wer_test_" + self.hparams.epoch_counter.current + ".txt"
-    print("asr_brain.hparams.wer_file:", asr_brain.hparams.wer_file)
+    asr_brain.hparams.wer_file = hparams["output_folder"] + "/wer_test_" + str(hparams["loaded_checkpoint"]) + ".txt"
     asr_brain.evaluate(
         test_data,
         min_key="WER",
